@@ -1,8 +1,24 @@
-# Welcome to your Expo app 👋
+# Picky
+
+A product discovery and review app built with React Native and Expo. Scan barcodes, search for products, and write reviews to help others make informed purchasing decisions.
+
+## Features
+
+- **Barcode Scanning**: Scan product barcodes to instantly see reviews from across the internet
+- **Product Search**: Search for products by name, brand, UPC, or description
+- **Review Writing**: Share your experiences by writing reviews
+
+## Get started
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Get started
+### Prerequisites
+
+- Node.js (v18 or later)
+- npm or yarn
+- iOS Simulator (for Mac) or Android Emulator, or Expo Go app on your phone
+
+### Installation
 
 1. Install dependencies
 
@@ -25,15 +41,15 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Get a fresh project
+## Project Structure
 
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- `app/` - Main application code with file-based routing
+  - `onboarding/` - Three-step onboarding flow
+  - `(tabs)/` - Main app tabs
+- `components/` - Reusable React components
+  - `OnboardingStep.tsx` - Individual onboarding step component
+  - `OnboardingDots.tsx` - Navigation indicator dots
+- `constants/` - App constants and theme configuration
 
 ## Learn more
 
