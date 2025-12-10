@@ -21,6 +21,7 @@ const MAPPING = {
   'magnifyingglass': 'search',
   'heart.fill': 'favorite',
   'plus.circle.fill': 'add-circle',
+  'camera.fill': 'camera-alt',
 } as IconMapping;
 
 /**

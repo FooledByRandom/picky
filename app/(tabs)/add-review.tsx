@@ -1,5 +1,6 @@
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 /**
@@ -14,6 +15,21 @@ export default function AddReviewScreen() {
         <Text style={styles.description}>
           Share your experiences by writing reviews. Help others make informed decisions about the products they're considering.
         </Text>
+        
+        <View style={styles.iconContainer}>
+          <IconSymbol
+            name="camera.fill"
+            size={32}
+            color="#000000"
+            style={styles.icon}
+          />
+          <IconSymbol
+            name="magnifyingglass"
+            size={32}
+            color="#000000"
+            style={styles.icon}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -42,6 +58,17 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
     lineHeight: 24,
+    marginBottom: 32,
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 24,
+    marginTop: 16,
+  },
+  icon: {
+    opacity: 0.8,
   },
 });
 
