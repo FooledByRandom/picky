@@ -1,7 +1,15 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Keyboard, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Animated, Dimensions, Keyboard, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const NUM_COLUMNS = 3;
+const NUM_ROWS = 20;
+const PADDING = 16;
+const GAP = 8;
+// Calculate square size: (screen width - left padding - right padding - gaps between squares) / number of columns
+const SQUARE_SIZE = (SCREEN_WIDTH - (PADDING * 2) - (GAP * (NUM_COLUMNS - 1))) / NUM_COLUMNS;
 
 /**
  * Search / Feed screen
@@ -14,29 +22,44 @@ export default function SearchScreen() {
   
   // Animation values
   const searchBarPosition = useRef(new Animated.Value(insets.bottom + 16 + 50 + 8)).current;
-  const contentPosition = useRef(new Animated.Value(0)).current;
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const descriptionOpacity = useRef(new Animated.Value(0)).current;
   
   // Calculate initial position: tab bar height (50) + tab bar bottom padding (16) + small gap (8)
   const initialSearchBarBottom = insets.bottom + 16 + 50 + 8;
 
-  // Animate content when focus state changes
+  // Animate title and description when focus state changes
   useEffect(() => {
     if (isFocused) {
-      // Move content to top immediately
-      Animated.timing(contentPosition, {
-        toValue: -150,
-        duration: 250,
-        useNativeDriver: false,
-      }).start();
+      // Show title and description
+      Animated.parallel([
+        Animated.timing(titleOpacity, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(descriptionOpacity, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]).start();
     } else {
-      // Return content to center
-      Animated.timing(contentPosition, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: false,
-      }).start();
+      // Hide title and description
+      Animated.parallel([
+        Animated.timing(titleOpacity, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(descriptionOpacity, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
-  }, [isFocused, contentPosition]);
+  }, [isFocused, titleOpacity, descriptionOpacity]);
 
   useEffect(() => {
     const keyboardWillShow = Keyboard.addListener(
@@ -79,22 +102,69 @@ export default function SearchScreen() {
     setIsFocused(false);
   };
 
+  // Generate placeholder squares
+  const renderSquares = () => {
+    const squares = [];
+    for (let i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
+      const isLastInRow = (i + 1) % NUM_COLUMNS === 0;
+      squares.push(
+        <TouchableOpacity
+          key={i}
+          style={[
+            styles.square,
+            !isLastInRow && styles.squareWithMargin,
+          ]}
+          activeOpacity={0.7}
+        >
+          <View style={styles.squareInner} />
+        </TouchableOpacity>
+      );
+    }
+    return squares;
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Title and Description - Only visible when search is focused */}
       <Animated.View 
         style={[
-          styles.content,
+          styles.headerContainer,
           {
-            transform: [{ translateY: contentPosition }],
+            opacity: titleOpacity,
           },
         ]}
+        pointerEvents="none"
       >
         <Text style={styles.title}>Search / Feed</Text>
+      </Animated.View>
+      
+      <Animated.View 
+        style={[
+          styles.descriptionContainer,
+          {
+            opacity: descriptionOpacity,
+          },
+        ]}
+        pointerEvents="none"
+      >
         <Text style={styles.description}>
           Search for products by name, brand, UPC, or description. Browse the latest product feed.
         </Text>
       </Animated.View>
+
+      {/* Feed Grid */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.feedTitle}>What's Hot</Text>
+        <View style={styles.gridContainer}>
+          {renderSquares()}
+        </View>
+      </ScrollView>
       
+      {/* Search Bar - Fixed at bottom */}
       <Animated.View 
         style={[
           styles.searchBarContainer,
@@ -132,25 +202,74 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-    paddingTop: 80,
+  headerContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingTop: 16,
+    paddingHorizontal: 24,
+    zIndex: 10,
+    backgroundColor: '#FFFFFF',
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
     color: '#000000',
-    marginBottom: 16,
     textAlign: 'center',
+    marginBottom: 8,
+  },
+  descriptionContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 24,
+    zIndex: 10,
+    backgroundColor: '#FFFFFF',
   },
   description: {
     fontSize: 16,
     color: '#6B7280',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: 8, // Minimal padding from top
+  },
+  feedTitle: {
+    fontSize: 60, // 2.5x the original 24
+    fontWeight: '700',
+    color: '#000000',
+    paddingHorizontal: PADDING,
+    paddingTop: 8, // Minimal padding from top
+    paddingBottom: 12,
+    textAlign: 'center',
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: PADDING,
+    paddingBottom: PADDING,
+  },
+  square: {
+    width: SQUARE_SIZE,
+    height: SQUARE_SIZE,
+    marginBottom: GAP,
+  },
+  squareWithMargin: {
+    marginRight: GAP,
+  },
+  squareInner: {
+    width: '100%',
+    height: '100%',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    backgroundColor: '#F9FAFB',
   },
   searchBarContainer: {
     position: 'absolute',
