@@ -1,15 +1,9 @@
+import { FeedCard } from '@/components/FeedCard';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { MOCK_FEED } from '@/constants/mockData';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Keyboard, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Animated, FlatList, Keyboard, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const NUM_COLUMNS = 3;
-const NUM_ROWS = 20;
-const PADDING = 16;
-const GAP = 8;
-// Calculate square size: (screen width - left padding - right padding - gaps between squares) / number of columns
-const SQUARE_SIZE = (SCREEN_WIDTH - (PADDING * 2) - (GAP * (NUM_COLUMNS - 1))) / NUM_COLUMNS;
 
 /**
  * Search / Feed screen
@@ -102,29 +96,23 @@ export default function SearchScreen() {
     setIsFocused(false);
   };
 
-  // Generate placeholder squares
-  const renderSquares = () => {
-    const squares = [];
-    for (let i = 0; i < NUM_ROWS * NUM_COLUMNS; i++) {
-      const isLastInRow = (i + 1) % NUM_COLUMNS === 0;
-      squares.push(
-        <TouchableOpacity
-          key={i}
-          style={[
-            styles.square,
-            !isLastInRow && styles.squareWithMargin,
-          ]}
-          activeOpacity={0.7}
-        >
-          <View style={styles.squareInner} />
-        </TouchableOpacity>
-      );
-    }
-    return squares;
-  };
+  const renderFeedItem = ({ item }: { item: typeof MOCK_FEED[0] }) => (
+    <View style={styles.cardWrapper}>
+      <FeedCard item={item} />
+    </View>
+  );
+
+  const renderListHeader = () => (
+    <View style={styles.header}>
+      <Text style={styles.headerTitle}>Discover</Text>
+      <Text style={styles.headerSubtitle}>
+        Fresh drops from Amazon, TikTok & YouTube
+      </Text>
+    </View>
+  );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Title and Description - Only visible when search is focused */}
       <Animated.View 
         style={[
@@ -152,17 +140,15 @@ export default function SearchScreen() {
         </Text>
       </Animated.View>
 
-      {/* Feed Grid */}
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+      {/* Feed List */}
+      <FlatList
+        data={MOCK_FEED}
+        keyExtractor={(item) => item.id}
+        renderItem={renderFeedItem}
+        contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.feedTitle}>What's Hot</Text>
-        <View style={styles.gridContainer}>
-          {renderSquares()}
-        </View>
-      </ScrollView>
+        ListHeaderComponent={renderListHeader}
+      />
       
       {/* Search Bar - Fixed at bottom */}
       <Animated.View 
@@ -200,7 +186,7 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F9FAFB', // Light gray background
   },
   headerContainer: {
     position: 'absolute',
@@ -210,7 +196,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingHorizontal: 24,
     zIndex: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F9FAFB',
   },
   title: {
     fontSize: 28,
@@ -226,7 +212,7 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 24,
     zIndex: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F9FAFB',
   },
   description: {
     fontSize: 16,
@@ -234,42 +220,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-  scrollView: {
-    flex: 1,
+  listContent: {
+    padding: 16,
+    paddingBottom: 100, // Space for search bar
   },
-  scrollContent: {
-    paddingTop: 8, // Minimal padding from top
+  cardWrapper: {
+    marginBottom: 8, // Spacing between cards
   },
-  feedTitle: {
-    fontSize: 60, // 2.5x the original 24
-    fontWeight: '700',
-    color: '#000000',
-    paddingHorizontal: PADDING,
-    paddingTop: 8, // Minimal padding from top
-    paddingBottom: 12,
-    textAlign: 'center',
+  header: {
+    marginBottom: 20,
+    marginTop: 10,
   },
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: PADDING,
-    paddingBottom: PADDING,
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: '800', // Extra bold
+    color: '#111827',
+    marginBottom: 4,
   },
-  square: {
-    width: SQUARE_SIZE,
-    height: SQUARE_SIZE,
-    marginBottom: GAP,
-  },
-  squareWithMargin: {
-    marginRight: GAP,
-  },
-  squareInner: {
-    width: '100%',
-    height: '100%',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    backgroundColor: '#F9FAFB',
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    fontWeight: '500',
   },
   searchBarContainer: {
     position: 'absolute',
