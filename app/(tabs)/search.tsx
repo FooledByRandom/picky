@@ -1,8 +1,10 @@
 import { FeedCard } from '@/components/FeedCard';
+import { FilterModal } from '@/components/FilterModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { MOCK_FEED } from '@/constants/mockData';
+import { FilterState } from '@/types/filterTypes';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, FlatList, Keyboard, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Animated, FlatList, Keyboard, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
@@ -12,6 +14,14 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 export default function SearchScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<FilterState>({
+    productType: null,
+    subProduct: null,
+    priceRange: { min: null, max: null },
+    minRating: null,
+    reviewFormat: null,
+  });
   const insets = useSafeAreaInsets();
   
   // Animation values
@@ -96,10 +106,32 @@ export default function SearchScreen() {
     setIsFocused(false);
   };
 
+  const handleOpenFilters = () => {
+    setIsFilterModalVisible(true);
+  };
+
+  const handleCloseFilters = () => {
+    setIsFilterModalVisible(false);
+  };
+
+  const handleApplyFilters = (filters: FilterState) => {
+    setActiveFilters(filters);
+    // TODO: Apply filters to MOCK_FEED data
+    // For now, filters are stored but not yet applied to the feed
+  };
+
+  const handleResetFilters = () => {
+    setActiveFilters({
+      productType: null,
+      subProduct: null,
+      priceRange: { min: null, max: null },
+      minRating: null,
+      reviewFormat: null,
+    });
+  };
+
   const renderFeedItem = ({ item }: { item: typeof MOCK_FEED[0] }) => (
-    <View style={styles.cardWrapper}>
-      <FeedCard item={item} />
-    </View>
+    <FeedCard item={item} />
   );
 
   const renderListHeader = () => (
@@ -108,78 +140,103 @@ export default function SearchScreen() {
       <Text style={styles.headerSubtitle}>
         Fresh drops from Amazon, TikTok & YouTube
       </Text>
+      <TouchableOpacity
+        style={styles.filterButton}
+        onPress={handleOpenFilters}
+        activeOpacity={0.7}
+      >
+        <IconSymbol
+          name="slider.horizontal.3"
+          size={18}
+          color="#111827"
+          style={styles.filterIcon}
+        />
+        <Text style={styles.filterButtonText}>Filters</Text>
+      </TouchableOpacity>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      {/* Title and Description - Only visible when search is focused */}
-      <Animated.View 
-        style={[
-          styles.headerContainer,
-          {
-            opacity: titleOpacity,
-          },
-        ]}
-        pointerEvents="none"
-      >
-        <Text style={styles.title}>Search / Feed</Text>
-      </Animated.View>
-      
-      <Animated.View 
-        style={[
-          styles.descriptionContainer,
-          {
-            opacity: descriptionOpacity,
-          },
-        ]}
-        pointerEvents="none"
-      >
-        <Text style={styles.description}>
-          Search for products by name, brand, UPC, or description. Browse the latest product feed.
-        </Text>
-      </Animated.View>
+    <>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        {/* Title and Description - Only visible when search is focused */}
+        <Animated.View 
+          style={[
+            styles.headerContainer,
+            {
+              opacity: titleOpacity,
+            },
+          ]}
+          pointerEvents="none"
+        >
+          <Text style={styles.title}>Search / Feed</Text>
+        </Animated.View>
+        
+        <Animated.View 
+          style={[
+            styles.descriptionContainer,
+            {
+              opacity: descriptionOpacity,
+            },
+          ]}
+          pointerEvents="none"
+        >
+          <Text style={styles.description}>
+            Search for products by name, brand, UPC, or description. Browse the latest product feed.
+          </Text>
+        </Animated.View>
 
-      {/* Feed List */}
-      <FlatList
-        data={MOCK_FEED}
-        keyExtractor={(item) => item.id}
-        renderItem={renderFeedItem}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={renderListHeader}
+        {/* Feed List */}
+        <FlatList
+          data={MOCK_FEED}
+          keyExtractor={(item) => item.id}
+          renderItem={renderFeedItem}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={renderListHeader}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+        />
+        
+        {/* Search Bar - Fixed at bottom */}
+        <Animated.View 
+          style={[
+            styles.searchBarContainer,
+            { 
+              bottom: searchBarPosition,
+            },
+          ]}
+        >
+          <View style={styles.searchBar}>
+            <IconSymbol
+              name="magnifyingglass"
+              size={18}
+              color="#6B7280"
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search products..."
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+        </Animated.View>
+      </SafeAreaView>
+
+      {/* Filter Modal - Rendered outside SafeAreaView for proper overlay */}
+      <FilterModal
+        visible={isFilterModalVisible}
+        onClose={handleCloseFilters}
+        onApply={handleApplyFilters}
+        initialFilters={activeFilters}
       />
-      
-      {/* Search Bar - Fixed at bottom */}
-      <Animated.View 
-        style={[
-          styles.searchBarContainer,
-          { 
-            bottom: searchBarPosition,
-          },
-        ]}
-      >
-        <View style={styles.searchBar}>
-          <IconSymbol
-            name="magnifyingglass"
-            size={18}
-            color="#6B7280"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search products..."
-            placeholderTextColor="#9CA3AF"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
-      </Animated.View>
-    </SafeAreaView>
+    </>
   );
 }
 
@@ -224,8 +281,8 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 100, // Space for search bar
   },
-  cardWrapper: {
-    marginBottom: 8, // Spacing between cards
+  row: {
+    justifyContent: 'space-between',
   },
   header: {
     marginBottom: 20,
@@ -241,6 +298,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6B7280',
     fontWeight: '500',
+    marginBottom: 12,
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+  },
+  filterIcon: {
+    marginRight: 6,
+  },
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
   },
   searchBarContainer: {
     position: 'absolute',

@@ -17,8 +17,9 @@ import {
 } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH * 0.9;
-const IMAGE_HEIGHT = 192; // 48 * 4 (h-48 equivalent)
+const IMAGE_HEIGHT = 140; // Reduced height for compact layout
+// Calculate card width for two-column layout: (screen width - left padding - right padding - gap) / 2
+const CARD_WIDTH = (SCREEN_WIDTH - 32 - 8) / 2;
 
 interface FeedCardProps {
   item: FeedItem;
@@ -48,7 +49,11 @@ export function FeedCard({ item, onPress }: FeedCardProps) {
   };
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={handlePress}
+      activeOpacity={0.7}
+    >
       {/* Image Header */}
       <View style={styles.imageContainer}>
         {display.mainImageUrl ? (
@@ -75,9 +80,9 @@ export function FeedCard({ item, onPress }: FeedCardProps) {
         >
           <IconSymbol
             name={platformStyle.iconName}
-            size={14}
+            size={12}
             color="#FFFFFF"
-            style={{ marginRight: 4 }}
+            style={{ marginRight: 3 }}
           />
           <Text style={styles.platformLabel}>{platformStyle.label}</Text>
         </View>
@@ -89,73 +94,56 @@ export function FeedCard({ item, onPress }: FeedCardProps) {
           {display.title}
         </Text>
 
+        {/* Description - moved inside card */}
         <Text style={styles.description} numberOfLines={2}>
           {display.description}
         </Text>
 
         {/* Dynamic Metrics Row */}
         <View style={styles.metricsRow}>
-          {/* Left Side: Price OR View Count */}
-          <View style={styles.metricsLeft}>
-            {commerce ? (
-              // If Commerce exists (Amazon), show Price
-              <View style={styles.priceContainer}>
-                <Text style={styles.price}>
-                  {formatPrice(commerce.currentPrice, commerce.currency)}
+          {/* Price OR View Count */}
+          {commerce ? (
+            <View style={styles.priceContainer}>
+              <Text style={styles.price}>
+                {formatPrice(commerce.currentPrice, commerce.currency)}
+              </Text>
+              {commerce.originalPrice && (
+                <Text style={styles.originalPrice}>
+                  {formatPrice(commerce.originalPrice, commerce.currency)}
                 </Text>
-                {commerce.originalPrice && (
-                  <Text style={[styles.originalPrice, { marginLeft: 8 }]}>
-                    {formatPrice(commerce.originalPrice, commerce.currency)}
-                  </Text>
-                )}
-              </View>
-            ) : (
-              // If No Commerce (TikTok/YouTube), show View Count
-              <View style={styles.viewCountContainer}>
-                <IconSymbol
-                  name="eye.fill"
-                  size={16}
-                  color="#6B7280"
-                  style={{ marginRight: 4 }}
-                />
-                <Text style={styles.viewCount}>
-                  {formatMetric(metrics.viewCount || 0)} Views
-                </Text>
-              </View>
-            )}
-          </View>
+              )}
+            </View>
+          ) : (
+            <View style={styles.viewCountContainer}>
+              <IconSymbol
+                name="eye.fill"
+                size={12}
+                color="#6B7280"
+                style={{ marginRight: 3 }}
+              />
+              <Text style={styles.viewCount}>
+                {formatMetric(metrics.viewCount || 0)}
+              </Text>
+            </View>
+          )}
 
-          {/* Right Side: Rating (Stars) */}
+          {/* Rating (Stars) */}
           {metrics.ratingScore && (
             <View style={styles.ratingContainer}>
               <IconSymbol
                 name="star.fill"
-                size={14}
+                size={12}
                 color="#FCD34D"
-                style={{ marginRight: 4 }}
+                style={{ marginRight: 2 }}
               />
-              <Text style={[styles.ratingScore, { marginRight: 4 }]}>
+              <Text style={styles.ratingScore}>
                 {metrics.ratingScore.toFixed(1)}
-              </Text>
-              <Text style={styles.reviewCount}>
-                ({formatMetric(metrics.reviewCount || 0)})
               </Text>
             </View>
           )}
         </View>
-
-        {/* Call to Action Button */}
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handlePress}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.actionButtonText}>
-            {commerce ? 'View Product' : 'Watch Video'}
-          </Text>
-        </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -195,68 +183,69 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5E5E5',
   },
   imagePlaceholderText: {
-    fontSize: 48,
+    fontSize: 36,
   },
   platformBadge: {
     position: 'absolute',
-    top: 12,
-    right: 12,
+    top: 8,
+    right: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
     borderRadius: 999,
   },
   platformLabel: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '700',
   },
   body: {
-    padding: 16,
+    padding: 12,
   },
   title: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '700',
     color: '#111827',
-    lineHeight: 24,
-    marginBottom: 8,
+    lineHeight: 18,
+    marginBottom: 6,
   },
   description: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6B7280',
-    lineHeight: 20,
-    marginBottom: 16,
+    lineHeight: 16,
+    marginBottom: 10,
   },
   metricsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  metricsLeft: {
-    flex: 1,
+    flexWrap: 'wrap',
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
+    flex: 1,
+    flexWrap: 'wrap',
   },
   price: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '700',
     color: '#111827',
+    marginRight: 4,
   },
   originalPrice: {
-    fontSize: 14,
+    fontSize: 11,
     color: '#9CA3AF',
     textDecorationLine: 'line-through',
   },
   viewCountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   viewCount: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '500',
     color: '#6B7280',
   },
@@ -264,30 +253,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FEF3C7',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
     borderRadius: 6,
   },
   ratingScore: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
     color: '#111827',
   },
-  reviewCount: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  actionButton: {
-    width: '100%',
-    backgroundColor: '#111827',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
 });
+
+

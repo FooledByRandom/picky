@@ -28,6 +28,8 @@ const MAPPING = {
   'eye.fill': 'visibility',
   'globe': 'public',
   'external-link': 'open-in-new',
+  'xmark': 'close',
+  'slider.horizontal.3': 'tune',
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],
