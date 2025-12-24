@@ -10,6 +10,7 @@ import { ContentType, FeedItem, SourcePlatform } from '@/types/reviewTypes';
  */
 export interface FeedItemRow {
   id: string;
+  user_id: string | null; // User who owns/created this feed item
   external_id: string;
   source_platform: string; // SourcePlatform enum value
   detected_at: string; // ISO date string
@@ -103,7 +104,7 @@ export function rowToFeedItem(row: FeedItemRow): FeedItem {
 /**
  * Type for inserting a new FeedItem into the database
  */
-export type FeedItemInsert = Omit<FeedItemRow, 'created_at' | 'updated_at'>;
+export type FeedItemInsert = Omit<FeedItemRow, 'id' | 'created_at' | 'updated_at'>;
 
 /**
  * Type for updating an existing FeedItem in the database
@@ -147,4 +148,5 @@ CREATE INDEX IF NOT EXISTS idx_feed_items_detected_at ON feed_items(detected_at 
 CREATE INDEX IF NOT EXISTS idx_feed_items_engagement_score ON feed_items(metrics_engagement_score DESC);
 CREATE INDEX IF NOT EXISTS idx_feed_items_tags ON feed_items USING GIN(tags);
 `;
+
 

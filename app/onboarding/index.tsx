@@ -48,6 +48,7 @@ export default function OnboardingScreen() {
   const handleComplete = async () => {
     try {
       await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
+      // Navigate to main app - auth check will happen in index.tsx
       router.replace('/(tabs)');
     } catch (error) {
       console.error('Error saving onboarding status:', error);

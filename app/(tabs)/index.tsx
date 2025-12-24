@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,18 @@ import {
   Dimensions,
   Animated,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { ProductCard } from '@/components/ProductCard';
+import { getFeedItems } from '@/lib/services/feed-items-service';
+import { getRecentScans } from '@/lib/services/recent-scans-service';
+import { useAuth } from '@/contexts/AuthContext';
+import type { FeedItem } from '@/types/reviewTypes';
+import type { RecentScanRow } from '@/lib/database/supabase-types';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 const HEADER_HEIGHT = SCREEN_HEIGHT / 3;
@@ -23,12 +29,50 @@ const HEADER_HEIGHT = SCREEN_HEIGHT / 3;
  * Header collapses on scroll, revealing full content area
  */
 export default function HomeScreen() {
+  const { user, loading: authLoading } = useAuth();
+  const [recentScans, setRecentScans] = useState<RecentScanRow[]>([]);
+  const [popularProducts, setPopularProducts] = useState<FeedItem[]>([]);
+  const [emergingProducts, setEmergingProducts] = useState<FeedItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const scrollY = useRef(new Animated.Value(0)).current;
   const headerHeight = scrollY.interpolate({
     inputRange: [0, HEADER_HEIGHT],
     outputRange: [HEADER_HEIGHT, 0],
     extrapolate: 'clamp',
   });
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+
+      // Load recent scans
+      const { data: scans } = await getRecentScans(10);
+      if (scans) {
+        setRecentScans(scans);
+      }
+
+      // Load popular products (high engagement score)
+      const { data: popular } = await getFeedItems({}, 10);
+      if (popular) {
+        setPopularProducts(popular);
+      }
+
+      // Load emerging products (recently detected)
+      const { data: emerging } = await getFeedItems({}, 10);
+      if (emerging) {
+        setEmergingProducts(emerging);
+      }
+
+      setLoading(false);
+    };
+
+    loadData();
+  }, [user]);
 
   const handleCameraPress = async () => {
     try {
@@ -92,21 +136,41 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          <ProductSection
-            title="Recent Scans"
-            products={[]}
-            emptyMessage="No recent scans. Tap the camera to scan a barcode!"
-          />
-          <ProductSection
-            title="Popular Products"
-            products={[]}
-            emptyMessage="No popular products yet. Check back soon!"
-          />
-          <ProductSection
-            title="Emerging Products"
-            products={[]}
-            emptyMessage="No emerging products yet. Be the first to discover something new!"
-          />
+          {loading || authLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#000000" />
+            </View>
+          ) : (
+            <>
+              <ProductSection
+                title="Recent Scans"
+                products={recentScans.map(scan => ({
+                  id: scan.id,
+                  name: scan.product_name || 'Unknown Product',
+                  barcode: scan.barcode,
+                }))}
+                emptyMessage="No recent scans. Tap the camera to scan a barcode!"
+              />
+              <ProductSection
+                title="Popular Products"
+                products={popularProducts.map(item => ({
+                  id: item.id,
+                  name: item.display.title,
+                  imageUrl: item.display.mainImageUrl,
+                }))}
+                emptyMessage="No popular products yet. Check back soon!"
+              />
+              <ProductSection
+                title="Emerging Products"
+                products={emergingProducts.map(item => ({
+                  id: item.id,
+                  name: item.display.title,
+                  imageUrl: item.display.mainImageUrl,
+                }))}
+                emptyMessage="No emerging products yet. Be the first to discover something new!"
+              />
+            </>
+          )}
         </View>
       </Animated.ScrollView>
 
@@ -143,7 +207,7 @@ export default function HomeScreen() {
 
 interface ProductSectionProps {
   title: string;
-  products: Array<{ id: string; name: string; brand?: string; imageUrl?: string }>;
+  products: Array<{ id: string; name: string; brand?: string; imageUrl?: string; barcode?: string }>;
   emptyMessage: string;
 }
 
@@ -257,5 +321,11 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
   },
 });

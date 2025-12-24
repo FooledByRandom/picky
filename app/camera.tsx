@@ -10,6 +10,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
+import { saveScan } from '@/lib/services/recent-scans-service';
+import { useAuth } from '@/contexts/AuthContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -18,6 +20,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
  * Displays camera view with barcode scanning functionality
  */
 export default function CameraScreen() {
+  const { user } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [facing, setFacing] = useState<CameraType>('back');
@@ -28,10 +31,18 @@ export default function CameraScreen() {
     }
   }, [permission]);
 
-  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
+  const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
     if (scanned) return;
     
     setScanned(true);
+    
+    // Save scan to Supabase
+    if (user) {
+      const { error } = await saveScan(data, null, null);
+      if (error) {
+        console.error('Error saving scan:', error);
+      }
+    }
     
     // Handle scanned barcode
     Alert.alert(

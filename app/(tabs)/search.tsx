@@ -1,10 +1,14 @@
 import { FeedCard } from '@/components/FeedCard';
 import { FilterModal } from '@/components/FilterModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { MOCK_FEED } from '@/constants/mockData';
+import { useAuth } from '@/contexts/AuthContext';
+import { getFeedItems } from '@/lib/services/feed-items-service';
+import { getFilters, saveFilters } from '@/lib/services/filter-storage';
+import { saveSearch } from '@/lib/services/searches-service';
 import { FilterState } from '@/types/filterTypes';
+import type { FeedItem } from '@/types/reviewTypes';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, FlatList, Keyboard, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, FlatList, Keyboard, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
@@ -12,6 +16,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
  * Displays search functionality and product feed
  */
 export default function SearchScreen() {
+  const { user, loading: authLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
@@ -22,6 +27,8 @@ export default function SearchScreen() {
     minRating: null,
     reviewFormat: null,
   });
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const insets = useSafeAreaInsets();
   
   // Animation values
@@ -114,23 +121,71 @@ export default function SearchScreen() {
     setIsFilterModalVisible(false);
   };
 
-  const handleApplyFilters = (filters: FilterState) => {
+  // Load filters from AsyncStorage on mount
+  useEffect(() => {
+    const loadFilters = async () => {
+      const { data } = await getFilters();
+      if (data) {
+        setActiveFilters(data);
+      }
+    };
+    loadFilters();
+  }, []);
+
+  // Load feed items
+  useEffect(() => {
+    const loadFeedItems = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      const filters = {
+        minRating: activeFilters.minRating ?? undefined,
+        priceRange: activeFilters.priceRange,
+        reviewFormat: activeFilters.reviewFormat ?? undefined,
+      };
+      const { data, error } = await getFeedItems(filters);
+      if (error) {
+        console.error('Error loading feed items:', error);
+      } else {
+        setFeedItems(data);
+      }
+      setLoading(false);
+    };
+
+    loadFeedItems();
+  }, [user, activeFilters]);
+
+  const handleApplyFilters = async (filters: FilterState) => {
     setActiveFilters(filters);
-    // TODO: Apply filters to MOCK_FEED data
-    // For now, filters are stored but not yet applied to the feed
+    await saveFilters(filters);
   };
 
-  const handleResetFilters = () => {
-    setActiveFilters({
+  const handleResetFilters = async () => {
+    const defaultFilters: FilterState = {
       productType: null,
       subProduct: null,
       priceRange: { min: null, max: null },
       minRating: null,
       reviewFormat: null,
-    });
+    };
+    setActiveFilters(defaultFilters);
+    await saveFilters(defaultFilters);
   };
 
-  const renderFeedItem = ({ item }: { item: typeof MOCK_FEED[0] }) => (
+  const handleSearch = async () => {
+    if (!searchQuery.trim() || !user) return;
+
+    // Save search to history
+    await saveSearch(searchQuery, activeFilters, feedItems.length);
+
+    // Reload feed items with search query (if needed)
+    // For now, we'll just save the search
+  };
+
+  const renderFeedItem = ({ item }: { item: FeedItem }) => (
     <FeedCard item={item} />
   );
 
@@ -187,16 +242,27 @@ export default function SearchScreen() {
         </Animated.View>
 
         {/* Feed List */}
-        <FlatList
-          data={MOCK_FEED}
-          keyExtractor={(item) => item.id}
-          renderItem={renderFeedItem}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          ListHeaderComponent={renderListHeader}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
-        />
+        {loading || authLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#000000" />
+          </View>
+        ) : (
+          <FlatList
+            data={feedItems}
+            keyExtractor={(item) => item.id}
+            renderItem={renderFeedItem}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ListHeaderComponent={renderListHeader}
+            numColumns={2}
+            columnWrapperStyle={styles.row}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No feed items found</Text>
+              </View>
+            }
+          />
+        )}
         
         {/* Search Bar - Fixed at bottom */}
         <Animated.View 
@@ -222,6 +288,7 @@ export default function SearchScreen() {
               onChangeText={setSearchQuery}
               onFocus={handleFocus}
               onBlur={handleBlur}
+              onSubmitEditing={handleSearch}
               autoCapitalize="none"
               autoCorrect={false}
             />
@@ -351,6 +418,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000000',
     padding: 0,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
+  },
+  emptyContainer: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
   },
 });
 
