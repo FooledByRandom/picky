@@ -75,3 +75,4 @@ export function getPlatformStyle(platform: SourcePlatform): PlatformStyle {
       };
   }
 }
+

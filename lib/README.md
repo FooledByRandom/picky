@@ -46,3 +46,4 @@ const dbRow = feedItemToRow(feedItem);
 - Reddit and Twitter data are currently mapped to `SourcePlatform.Google` as they may come through Google search results. If you need separate platforms, extend the `SourcePlatform` enum.
 - All mappers preserve the original `rawPayload` for debugging and auditing.
 - The normalization service automatically detects the platform if not explicitly provided.
+

@@ -119,3 +119,4 @@ export const MOCK_FEED: FeedItem[] = [
     tags: ['airpods', 'unboxing', 'tech'],
   },
 ];
+

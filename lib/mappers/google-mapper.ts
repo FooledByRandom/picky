@@ -121,3 +121,4 @@ export function mapGoogleToFeedItem(
     rawPayload: rawData,
   };
 }
+

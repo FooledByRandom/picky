@@ -8,12 +8,12 @@ import { FeedItem } from '@/types/reviewTypes';
 import { Image } from 'expo-image';
 import React from 'react';
 import {
-    Dimensions,
-    Linking,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Linking,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');

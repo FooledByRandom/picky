@@ -63,3 +63,4 @@ export function validateFeedItem(data: unknown) {
 export function safeValidateFeedItem(data: unknown) {
   return feedItemSchema.safeParse(data);
 }
+

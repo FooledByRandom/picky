@@ -170,3 +170,4 @@ export function mapAmazonToFeedItem(
     rawPayload: rawData,
   };
 }
+

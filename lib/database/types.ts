@@ -147,3 +147,4 @@ CREATE INDEX IF NOT EXISTS idx_feed_items_detected_at ON feed_items(detected_at 
 CREATE INDEX IF NOT EXISTS idx_feed_items_engagement_score ON feed_items(metrics_engagement_score DESC);
 CREATE INDEX IF NOT EXISTS idx_feed_items_tags ON feed_items USING GIN(tags);
 `;
+

@@ -129,3 +129,4 @@ export function normalizeFeedItems(
 ): FeedItem[] {
   return rawDataArray.map((rawData) => normalizeFeedItem(rawData, options));
 }
+

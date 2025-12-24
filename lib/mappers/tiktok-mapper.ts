@@ -48,8 +48,8 @@ export function mapTikTokToFeedItem(
   id: string,
   detectedAt: Date = new Date()
 ): FeedItem {
-  const videoId = rawData.videoId || rawData.externalId || '';
-  const videoUrl = rawData.videoUrl || rawData.actionUrl || `https://tiktok.com/@video/${videoId}`;
+  const videoId = rawData.videoId || (rawData.externalId as string | undefined) || '';
+  const videoUrl = rawData.videoUrl || (rawData.actionUrl as string | undefined) || `https://tiktok.com/@video/${videoId}`;
   const title = rawData.title || rawData.productName || 'TikTok Video';
   const description = rawData.description || rawData.caption || '';
   const thumbnailUrl = rawData.thumbnailUrl || '';
@@ -57,14 +57,14 @@ export function mapTikTokToFeedItem(
   const likeCount = rawData.likeCount || 0;
   const commentCount = rawData.commentCount || 0;
   const shareCount = rawData.shareCount || 0;
-  const productUrl = rawData.productUrl;
+  const productUrl = rawData.productUrl as string | undefined;
   const tags = rawData.tags || [];
 
   const engagementScore = calculateEngagementScore(viewCount, likeCount, commentCount, shareCount);
 
   return {
     id,
-    externalId: videoId,
+    externalId: videoId || '',
     sourcePlatform: SourcePlatform.TikTok,
     detectedAt,
     display: {
@@ -72,7 +72,7 @@ export function mapTikTokToFeedItem(
       description,
       mainImageUrl: thumbnailUrl,
       thumbnailUrl,
-      actionUrl: productUrl || videoUrl,
+      actionUrl: productUrl || videoUrl || '',
       contentType: ContentType.VideoReview,
     },
     commerce: null, // TikTok videos typically don't have direct commerce data
@@ -85,3 +85,4 @@ export function mapTikTokToFeedItem(
     rawPayload: rawData,
   };
 }
+
