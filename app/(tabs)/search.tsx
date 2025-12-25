@@ -7,6 +7,7 @@ import { getFilters, saveFilters } from '@/lib/services/filter-storage';
 import { saveSearch } from '@/lib/services/searches-service';
 import { FilterState } from '@/types/filterTypes';
 import type { FeedItem } from '@/types/reviewTypes';
+import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, FlatList, Keyboard, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -195,19 +196,29 @@ export default function SearchScreen() {
       <Text style={styles.headerSubtitle}>
         Fresh drops from Amazon, TikTok & YouTube
       </Text>
-      <TouchableOpacity
-        style={styles.filterButton}
-        onPress={handleOpenFilters}
-        activeOpacity={0.7}
-      >
-        <IconSymbol
-          name="slider.horizontal.3"
-          size={18}
-          color="#111827"
-          style={styles.filterIcon}
-        />
-        <Text style={styles.filterButtonText}>Filters</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonRow}>
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={handleOpenFilters}
+          activeOpacity={0.7}
+        >
+          <IconSymbol
+            name="slider.horizontal.3"
+            size={18}
+            color="#111827"
+            style={styles.filterIcon}
+          />
+          <Text style={styles.filterButtonText}>Filters</Text>
+        </TouchableOpacity>
+        {/* Temporary test button - remove in production */}
+        <TouchableOpacity
+          style={styles.testButton}
+          onPress={() => router.push('/product/1' as any)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.testButtonText}>Test Product</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -367,10 +378,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 12,
   },
+  buttonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -385,6 +401,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#111827',
+  },
+  testButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#000000',
+  },
+  testButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   searchBarContainer: {
     position: 'absolute',

@@ -6,10 +6,10 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { formatMetric, formatPrice, getPlatformStyle } from '@/lib/utils/formatting';
 import { FeedItem } from '@/types/reviewTypes';
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import React from 'react';
 import {
   Dimensions,
-  Linking,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -41,10 +41,8 @@ export function FeedCard({ item, onPress }: FeedCardProps) {
     if (onPress) {
       onPress(item);
     } else {
-      // Default: open URL in browser
-      Linking.openURL(display.actionUrl).catch((err) =>
-        console.error('Failed to open URL:', err)
-      );
+      // Default: navigate to product detail page
+      router.push(`/product/${item.id}` as any);
     }
   };
 
