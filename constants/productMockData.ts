@@ -335,3 +335,4 @@ export function getProductDetailById(id: string): ProductDetail | null {
   return MOCK_PRODUCT_DETAILS[id] || null;
 }
 
+

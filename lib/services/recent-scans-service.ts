@@ -104,3 +104,4 @@ export async function deleteScan(id: string): Promise<{ error: Error | null }> {
   }
 }
 
+

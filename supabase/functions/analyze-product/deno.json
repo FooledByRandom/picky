@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "google-genai": "npm:@google/generative-ai@^0.21.0",
+    "cheerio": "npm:cheerio@1.0.0"
+  }
+}
+

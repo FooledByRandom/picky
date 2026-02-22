@@ -105,3 +105,4 @@ export async function deleteSearch(id: string): Promise<{ error: Error | null }>
   }
 }
 
+

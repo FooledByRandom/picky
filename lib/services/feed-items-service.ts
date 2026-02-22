@@ -2,10 +2,9 @@
  * Service for managing feed items in Supabase
  * Handles CRUD operations for feed items with user authentication
  */
-import { supabase } from '@/lib/supabase/client';
 import { feedItemToRow, rowToFeedItem, type FeedItemInsert, type FeedItemUpdate } from '@/lib/database/types';
+import { supabase } from '@/lib/supabase/client';
 import type { FeedItem } from '@/types/reviewTypes';
-import type { FilterState } from '@/types/filterTypes';
 
 export interface FeedItemFilters {
   sourcePlatform?: string[];

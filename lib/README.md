@@ -47,3 +47,4 @@ const dbRow = feedItemToRow(feedItem);
 - All mappers preserve the original `rawPayload` for debugging and auditing.
 - The normalization service automatically detects the platform if not explicitly provided.
 
+

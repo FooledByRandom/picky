@@ -1,9 +1,12 @@
 import { FeedCard } from '@/components/FeedCard';
 import { FilterModal } from '@/components/FilterModal';
+import { ProductAnalysisModal } from '@/components/ProductAnalysisModal';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAuth } from '@/contexts/AuthContext';
+import type { Product } from '@/lib/database/types';
 import { getFeedItems } from '@/lib/services/feed-items-service';
 import { getFilters, saveFilters } from '@/lib/services/filter-storage';
+import { analyzeProductUrl } from '@/lib/services/product-analysis-service';
 import { saveSearch } from '@/lib/services/searches-service';
 import { FilterState } from '@/types/filterTypes';
 import type { FeedItem } from '@/types/reviewTypes';
@@ -30,6 +33,10 @@ export default function SearchScreen() {
   });
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAnalysisModalVisible, setIsAnalysisModalVisible] = useState(false);
+  const [analyzedProduct, setAnalyzedProduct] = useState<Product | null>(null);
+  const [analyzingProduct, setAnalyzingProduct] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
   
   // Animation values
@@ -176,14 +183,49 @@ export default function SearchScreen() {
     await saveFilters(defaultFilters);
   };
 
+  /**
+   * Detects if input is a URL and handles accordingly
+   */
+  const isUrl = (input: string): boolean => {
+    const urlPattern = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/i;
+    return urlPattern.test(input.trim());
+  };
+
   const handleSearch = async () => {
     if (!searchQuery.trim() || !user) return;
 
-    // Save search to history
-    await saveSearch(searchQuery, activeFilters, feedItems.length);
+    const trimmedQuery = searchQuery.trim();
 
-    // Reload feed items with search query (if needed)
-    // For now, we'll just save the search
+    // Check if input is a URL
+    if (isUrl(trimmedQuery)) {
+      // Analyze product URL
+      setAnalyzingProduct(true);
+      setAnalysisError(null);
+      setAnalyzedProduct(null);
+      setIsAnalysisModalVisible(true);
+
+      const { data, error } = await analyzeProductUrl(trimmedQuery);
+
+      setAnalyzingProduct(false);
+
+      if (error) {
+        setAnalysisError(error.message);
+      } else if (data) {
+        setAnalyzedProduct(data);
+      } else {
+        setAnalysisError('Failed to analyze product');
+      }
+    } else {
+      // Regular search - save to history
+      await saveSearch(trimmedQuery, activeFilters, feedItems.length);
+    }
+  };
+
+  const handleCloseAnalysisModal = () => {
+    setIsAnalysisModalVisible(false);
+    setAnalyzedProduct(null);
+    setAnalysisError(null);
+    setSearchQuery(''); // Clear search input after analysis
   };
 
   const renderFeedItem = ({ item }: { item: FeedItem }) => (
@@ -313,6 +355,15 @@ export default function SearchScreen() {
         onClose={handleCloseFilters}
         onApply={handleApplyFilters}
         initialFilters={activeFilters}
+      />
+
+      {/* Product Analysis Modal */}
+      <ProductAnalysisModal
+        visible={isAnalysisModalVisible}
+        onClose={handleCloseAnalysisModal}
+        productData={analyzedProduct}
+        loading={analyzingProduct}
+        error={analysisError}
       />
     </>
   );
