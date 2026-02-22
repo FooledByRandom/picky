@@ -3,8 +3,9 @@
  * Displays product information with image header, overlapping info circle,
  * and collapsible sections for Reviews, Price, and Similar Products
  */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   View,
   Text,
   StyleSheet,
@@ -20,6 +21,7 @@ import { FeedCard } from '@/components/FeedCard';
 import { ProductCollapsible } from '@/components/ProductCollapsible';
 import { ProductCard } from '@/components/ProductCard';
 import { getProductDetailById } from '@/constants/productMockData';
+import { getFeedItemById } from '@/lib/services/feed-items-service';
 import { formatPrice } from '@/lib/utils/formatting';
 import type { ProductDetail } from '@/constants/productMockData';
 
@@ -27,11 +29,65 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HEADER_HEIGHT = SCREEN_HEIGHT * 0.15; // 15% of screen height
 const CIRCLE_SIZE = 400; // Much larger circle
 const CIRCLE_VISIBLE_HEIGHT = CIRCLE_SIZE * 0.1; // Only show bottom 10% as crescent/hump
-const CIRCLE_SPACING = 0; // No spacing - crescent sits at bottom of image
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const product = id ? getProductDetailById(id) : null;
+  const [product, setProduct] = useState<ProductDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadProduct() {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+
+      // Try mock data first (for demo products '1' and '4')
+      const mockProduct = getProductDetailById(id);
+      if (mockProduct) {
+        setProduct(mockProduct);
+        setLoading(false);
+        return;
+      }
+
+      // Fall back to real feed item from the database
+      const { data: feedItem } = await getFeedItemById(id);
+      if (feedItem) {
+        setProduct({
+          id: feedItem.id,
+          name: feedItem.display.title,
+          brand: feedItem.sourcePlatform,
+          imageUrl: null,
+          overallRating: feedItem.metrics.ratingScore ?? 0,
+          reviewCount: feedItem.metrics.reviewCount ?? 0,
+          price: feedItem.commerce
+            ? {
+                current: feedItem.commerce.currentPrice,
+                original: feedItem.commerce.originalPrice ?? undefined,
+                currency: feedItem.commerce.currency,
+                merchant: feedItem.commerce.merchantName,
+              }
+            : { current: 0, currency: 'USD', merchant: '' },
+          reviews: [feedItem],
+          similarProducts: [],
+        });
+      }
+
+      setLoading(false);
+    }
+
+    loadProduct();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <View style={styles.errorContainer}>
+          <ActivityIndicator size="large" color="#000000" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!product) {
     return (
@@ -62,15 +118,21 @@ export default function ProductDetailScreen() {
       >
         {/* Product Image Header (15% of screen) with Crescent at Bottom */}
         <View style={[styles.imageHeader, { height: HEADER_HEIGHT }]}>
-          <Image
-            source={{ uri: product.imageUrl }}
-            style={styles.headerImage}
-            contentFit="cover"
-            transition={500}
-            placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
-            placeholderContentFit="cover"
-          />
-          
+          {product.imageUrl ? (
+            <Image
+              source={{ uri: product.imageUrl }}
+              style={styles.headerImage}
+              contentFit="cover"
+              transition={500}
+              placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
+              placeholderContentFit="cover"
+            />
+          ) : (
+            <View style={[styles.headerImage, styles.emojiHeader]}>
+              <Text style={styles.emojiHeaderText}>📦</Text>
+            </View>
+          )}
+
           {/* Back Button */}
           <TouchableOpacity
             style={styles.backButtonOverlay}
@@ -144,75 +206,81 @@ export default function ProductDetailScreen() {
             )}
           </ProductCollapsible>
 
-          {/* Price Section */}
-          <ProductCollapsible title="Price" defaultOpen={false}>
-            <View style={styles.priceSection}>
-              <View style={styles.priceRow}>
-                <Text style={styles.currentPrice}>
-                  {formatPrice(product.price.current, product.price.currency)}
-                </Text>
+          {/* Price Section - only shown when price data exists */}
+          {product.price.current > 0 && (
+            <ProductCollapsible title="Price" defaultOpen={false}>
+              <View style={styles.priceSection}>
+                <View style={styles.priceRow}>
+                  <Text style={styles.currentPrice}>
+                    {formatPrice(product.price.current, product.price.currency)}
+                  </Text>
+                  {product.price.original && (
+                    <Text style={styles.originalPrice}>
+                      {formatPrice(product.price.original, product.price.currency)}
+                    </Text>
+                  )}
+                </View>
                 {product.price.original && (
-                  <Text style={styles.originalPrice}>
-                    {formatPrice(product.price.original, product.price.currency)}
-                  </Text>
+                  <View style={styles.savingsBadge}>
+                    <Text style={styles.savingsText}>
+                      Save {formatPrice(
+                        product.price.original - product.price.current,
+                        product.price.currency
+                      )}
+                    </Text>
+                  </View>
                 )}
-              </View>
-              {product.price.original && (
-                <View style={styles.savingsBadge}>
-                  <Text style={styles.savingsText}>
-                    Save {formatPrice(
-                      product.price.original - product.price.current,
-                      product.price.currency
-                    )}
+                {product.price.merchant ? (
+                  <View style={styles.merchantInfo}>
+                    <IconSymbol
+                      name="storefront"
+                      size={16}
+                      color="#6B7280"
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text style={styles.merchantText}>
+                      Available at {product.price.merchant}
+                    </Text>
+                  </View>
+                ) : null}
+                {/* Mock price history */}
+                <View style={styles.priceHistory}>
+                  <Text style={styles.priceHistoryTitle}>Price History</Text>
+                  <View style={styles.priceHistoryChart}>
+                    <View style={styles.chartBar} />
+                    <View style={[styles.chartBar, styles.chartBarLower]} />
+                    <View style={[styles.chartBar, styles.chartBarLower]} />
+                    <View style={styles.chartBar} />
+                    <View style={[styles.chartBar, styles.chartBarLower]} />
+                  </View>
+                  <Text style={styles.priceHistoryNote}>
+                    Price has dropped 13% in the last 30 days
                   </Text>
                 </View>
-              )}
-              <View style={styles.merchantInfo}>
-                <IconSymbol
-                  name="storefront"
-                  size={16}
-                  color="#6B7280"
-                  style={{ marginRight: 6 }}
-                />
-                <Text style={styles.merchantText}>
-                  Available at {product.price.merchant}
-                </Text>
               </View>
-              {/* Mock price history */}
-              <View style={styles.priceHistory}>
-                <Text style={styles.priceHistoryTitle}>Price History</Text>
-                <View style={styles.priceHistoryChart}>
-                  <View style={styles.chartBar} />
-                  <View style={[styles.chartBar, styles.chartBarLower]} />
-                  <View style={[styles.chartBar, styles.chartBarLower]} />
-                  <View style={styles.chartBar} />
-                  <View style={[styles.chartBar, styles.chartBarLower]} />
-                </View>
-                <Text style={styles.priceHistoryNote}>
-                  Price has dropped 13% in the last 30 days
-                </Text>
-              </View>
-            </View>
-          </ProductCollapsible>
+            </ProductCollapsible>
+          )}
 
-          {/* Similar Products Section */}
-          <ProductCollapsible title="Similar Products" defaultOpen={false}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.similarProductsScroll}
-            >
-              {product.similarProducts.map((similarProduct) => (
-                <ProductCard
-                  key={similarProduct.id}
-                  id={similarProduct.id}
-                  name={similarProduct.display.title}
-                  brand={similarProduct.commerce?.merchantName}
-                  imageUrl={similarProduct.display.mainImageUrl}
-                />
-              ))}
-            </ScrollView>
-          </ProductCollapsible>
+          {/* Similar Products Section - only shown when data exists */}
+          {product.similarProducts.length > 0 && (
+            <ProductCollapsible title="Similar Products" defaultOpen={false}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.similarProductsScroll}
+              >
+                {product.similarProducts.map((similarProduct) => (
+                  <ProductCard
+                    key={similarProduct.id}
+                    id={similarProduct.id}
+                    name={similarProduct.display.title}
+                    brand={similarProduct.commerce?.merchantName}
+                    imageUrl={similarProduct.display.mainImageUrl}
+                  />
+                ))}
+              </ScrollView>
+            </ProductCollapsible>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -262,6 +330,14 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  emojiHeader: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+  },
+  emojiHeaderText: {
+    fontSize: 48,
+  },
   backButtonOverlay: {
     position: 'absolute',
     top: 16,
@@ -300,8 +376,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 8,
-    // Position circle so only bottom 10% (crescent/hump) is visible
-    // Move it down so only bottom arc shows, creating the crescent effect
     position: 'absolute',
     bottom: -(CIRCLE_SIZE - CIRCLE_VISIBLE_HEIGHT),
     left: (SCREEN_WIDTH - CIRCLE_SIZE) / 2,
@@ -310,8 +384,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    // Position ONLY brand name in the visible bottom crescent/hump
-    paddingBottom: CIRCLE_SIZE * 0.9 - CIRCLE_VISIBLE_HEIGHT + 12, // Move down so only brand is in crescent
+    paddingBottom: CIRCLE_SIZE * 0.9 - CIRCLE_VISIBLE_HEIGHT + 12,
   },
   brandName: {
     fontSize: 9,
@@ -350,7 +423,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   content: {
-    marginTop: 4, // Just a tad down so Reviews is visible in exact same spot
+    marginTop: 4,
     paddingHorizontal: 16,
   },
   reviewsGrid: {

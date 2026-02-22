@@ -8,7 +8,7 @@ export interface ProductDetail {
   id: string;
   name: string;
   brand: string;
-  imageUrl: string;
+  imageUrl: string | null;
   overallRating: number;
   reviewCount: number;
   reviews: FeedItem[];
@@ -29,7 +29,7 @@ export const MOCK_PRODUCT_DETAILS: Record<string, ProductDetail> = {
     id: '1',
     name: 'Sony WH-1000XM5 Wireless Premium Noise Canceling Overhead Headphones',
     brand: 'Sony',
-    imageUrl: 'https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SL1500_.jpg',
+    imageUrl: null,
     overallRating: 4.8,
     reviewCount: 10420,
     price: {
@@ -47,7 +47,7 @@ export const MOCK_PRODUCT_DETAILS: Record<string, ProductDetail> = {
         display: {
           title: 'Best Headphones for Work',
           description: 'These Sony headphones changed my life! 🎧 #headphones #tech',
-          mainImageUrl: 'https://p16-sign-va.tiktokcdn.com/example.jpg',
+          mainImageUrl: null,
           actionUrl: 'https://tiktok.com/@user/video/7234567890123456789',
           contentType: ContentType.VideoReview,
         },
@@ -67,7 +67,7 @@ export const MOCK_PRODUCT_DETAILS: Record<string, ProductDetail> = {
         display: {
           title: 'Sony WH-1000XM5 Review - Best Noise Canceling Headphones?',
           description: 'In-depth review of the Sony WH-1000XM5 headphones covering sound quality, noise canceling, and comfort.',
-          mainImageUrl: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+          mainImageUrl: null,
           actionUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
           contentType: ContentType.VideoReview,
         },
@@ -87,7 +87,7 @@ export const MOCK_PRODUCT_DETAILS: Record<string, ProductDetail> = {
         display: {
           title: 'Excellent noise cancellation and sound quality',
           description: 'I\'ve been using these for 3 months now and they are absolutely fantastic. The noise cancellation is top-notch and the battery life is incredible.',
-          mainImageUrl: 'https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SL1500_.jpg',
+          mainImageUrl: null,
           actionUrl: 'https://amazon.com/dp/B09XS7JWHH',
           contentType: ContentType.PhysicalProduct,
         },
@@ -107,7 +107,7 @@ export const MOCK_PRODUCT_DETAILS: Record<string, ProductDetail> = {
         display: {
           title: 'Great headphones but pricey',
           description: 'Sound quality is amazing and comfort is good for long sessions. Only downside is the price point.',
-          mainImageUrl: 'https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SL1500_.jpg',
+          mainImageUrl: null,
           actionUrl: 'https://amazon.com/dp/B09XS7JWHH',
           contentType: ContentType.PhysicalProduct,
         },
@@ -129,7 +129,7 @@ export const MOCK_PRODUCT_DETAILS: Record<string, ProductDetail> = {
         display: {
           title: 'Apple AirPods Pro (2nd Generation)',
           description: 'Active Noise Cancellation, Adaptive Transparency, Personalized Spatial Audio.',
-          mainImageUrl: 'https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SL1500_.jpg',
+          mainImageUrl: null,
           actionUrl: 'https://amazon.com/dp/B08XYZ123',
           contentType: ContentType.PhysicalProduct,
         },
@@ -155,7 +155,7 @@ export const MOCK_PRODUCT_DETAILS: Record<string, ProductDetail> = {
         display: {
           title: 'Bose QuietComfort 45 Wireless Headphones',
           description: 'Premium noise canceling headphones with world-class noise cancellation.',
-          mainImageUrl: 'https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SL1500_.jpg',
+          mainImageUrl: null,
           actionUrl: 'https://amazon.com/dp/B08ABC456',
           contentType: ContentType.PhysicalProduct,
         },
@@ -179,7 +179,7 @@ export const MOCK_PRODUCT_DETAILS: Record<string, ProductDetail> = {
     id: '4',
     name: 'Apple AirPods Pro (2nd Generation)',
     brand: 'Apple',
-    imageUrl: 'https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SL1500_.jpg',
+    imageUrl: null,
     overallRating: 4.7,
     reviewCount: 15200,
     price: {
@@ -197,7 +197,7 @@ export const MOCK_PRODUCT_DETAILS: Record<string, ProductDetail> = {
         display: {
           title: 'AirPods Pro Unboxing',
           description: 'Just got these and they are AMAZING! The noise cancellation is incredible 🎧✨',
-          mainImageUrl: 'https://p16-sign-va.tiktokcdn.com/example2.jpg',
+          mainImageUrl: null,
           actionUrl: 'https://tiktok.com/@user/video/9876543210987654321',
           contentType: ContentType.VideoReview,
         },
@@ -217,7 +217,7 @@ export const MOCK_PRODUCT_DETAILS: Record<string, ProductDetail> = {
         display: {
           title: 'Perfect fit and amazing sound',
           description: 'These are the best earbuds I\'ve ever owned. The fit is perfect and the sound quality is outstanding.',
-          mainImageUrl: 'https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SL1500_.jpg',
+          mainImageUrl: null,
           actionUrl: 'https://amazon.com/dp/B08XYZ123',
           contentType: ContentType.PhysicalProduct,
         },
@@ -237,7 +237,7 @@ export const MOCK_PRODUCT_DETAILS: Record<string, ProductDetail> = {
         display: {
           title: 'AirPods Pro 2 Review - Worth the Upgrade?',
           description: 'Comparing the new AirPods Pro 2 with the original model. Is it worth upgrading?',
-          mainImageUrl: 'https://i.ytimg.com/vi/example/maxresdefault.jpg',
+          mainImageUrl: null,
           actionUrl: 'https://youtube.com/watch?v=example',
           contentType: ContentType.VideoReview,
         },
@@ -257,7 +257,7 @@ export const MOCK_PRODUCT_DETAILS: Record<string, ProductDetail> = {
         display: {
           title: 'Good but battery could be better',
           description: 'Sound quality is great and noise cancellation works well. Battery life is decent but could be improved.',
-          mainImageUrl: 'https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SL1500_.jpg',
+          mainImageUrl: null,
           actionUrl: 'https://amazon.com/dp/B08XYZ123',
           contentType: ContentType.PhysicalProduct,
         },
@@ -279,7 +279,7 @@ export const MOCK_PRODUCT_DETAILS: Record<string, ProductDetail> = {
         display: {
           title: 'Sony WH-1000XM5 Wireless Premium Noise Canceling Overhead Headphones',
           description: 'Industry-leading noise canceling with Dual Noise Sensor technology.',
-          mainImageUrl: 'https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SL1500_.jpg',
+          mainImageUrl: null,
           actionUrl: 'https://amazon.com/dp/B09XS7JWHH',
           contentType: ContentType.PhysicalProduct,
         },
@@ -305,7 +305,7 @@ export const MOCK_PRODUCT_DETAILS: Record<string, ProductDetail> = {
         display: {
           title: 'Samsung Galaxy Buds2 Pro',
           description: 'Premium wireless earbuds with active noise cancellation and 360 Audio.',
-          mainImageUrl: 'https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SL1500_.jpg',
+          mainImageUrl: null,
           actionUrl: 'https://amazon.com/dp/B08DEF789',
           contentType: ContentType.PhysicalProduct,
         },

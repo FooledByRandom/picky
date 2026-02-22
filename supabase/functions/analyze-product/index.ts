@@ -307,41 +307,17 @@ Deno.serve(async (req) => {
 
     // Get user from JWT token
     const authHeader = req.headers.get("Authorization");
-    // #region agent log
-    console.log(JSON.stringify({location:"analyze-product/index.ts:309",message:"Authorization header check",data:{headerPresent:!!authHeader,headerValue:authHeader?.substring(0,30)},timestamp:Date.now(),sessionId:"debug-session",runId:"run1",hypothesisId:"D"}));
-    // #endregion
-    console.log("Authorization header received:", authHeader ? "Present" : "Missing");
-    console.log("All headers:", JSON.stringify(Object.fromEntries(req.headers.entries())));
-    
     let userId: string | null = null;
 
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
-      // #region agent log
-      console.log(JSON.stringify({location:"analyze-product/index.ts:316",message:"Token extracted",data:{tokenLength:token.length,tokenPreview:token.substring(0,20)},timestamp:Date.now(),sessionId:"debug-session",runId:"run1",hypothesisId:"B"}));
-      // #endregion
-      console.log("Token length:", token.length);
-      console.log("Token preview:", token.substring(0, 20) + "...");
-      
-      // #region agent log
-      console.log(JSON.stringify({location:"analyze-product/index.ts:320",message:"Calling getUser for token verification",data:{tokenLength:token.length},timestamp:Date.now(),sessionId:"debug-session",runId:"run1",hypothesisId:"E"}));
-      // #endregion
       const {
         data: { user },
         error: authError,
       } = await supabaseAnon.auth.getUser(token);
-      
-      // #region agent log
-      console.log(JSON.stringify({location:"analyze-product/index.ts:327",message:"getUser result",data:{hasUser:!!user,userId:user?.id,authError:authError?.message,authErrorStatus:authError?.status},timestamp:Date.now(),sessionId:"debug-session",runId:"run1",hypothesisId:"E"}));
-      // #endregion
-      
+
       if (authError) {
-        console.error("Auth error:", authError);
-        console.error("Auth error message:", authError.message);
-        console.error("Auth error status:", authError.status);
-        // #region agent log
-        console.log(JSON.stringify({location:"analyze-product/index.ts:332",message:"Auth verification failed",data:{error:authError.message,status:authError.status},timestamp:Date.now(),sessionId:"debug-session",runId:"run1",hypothesisId:"E"}));
-        // #endregion
+        console.error("Auth error:", authError.message);
         return new Response(
           JSON.stringify({ error: `Invalid authentication token: ${authError.message}` }),
           {
@@ -350,18 +326,8 @@ Deno.serve(async (req) => {
           }
         );
       }
-      
+
       userId = user?.id || null;
-      // #region agent log
-      console.log(JSON.stringify({location:"analyze-product/index.ts:344",message:"User ID extracted successfully",data:{userId,userEmail:user?.email},timestamp:Date.now(),sessionId:"debug-session",runId:"run1",hypothesisId:"E"}));
-      // #endregion
-      console.log("User ID extracted:", userId);
-      console.log("User email:", user?.email);
-    } else {
-      // #region agent log
-      console.log(JSON.stringify({location:"analyze-product/index.ts:349",message:"No Authorization header",data:{},timestamp:Date.now(),sessionId:"debug-session",runId:"run1",hypothesisId:"D"}));
-      // #endregion
-      console.error("No Authorization header found in request");
     }
 
     if (!userId) {

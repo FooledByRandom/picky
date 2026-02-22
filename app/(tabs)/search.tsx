@@ -252,14 +252,6 @@ export default function SearchScreen() {
           />
           <Text style={styles.filterButtonText}>Filters</Text>
         </TouchableOpacity>
-        {/* Temporary test button - remove in production */}
-        <TouchableOpacity
-          style={styles.testButton}
-          onPress={() => router.push('/product/1' as any)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.testButtonText}>Test Product</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -452,17 +444,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#111827',
-  },
-  testButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#000000',
-  },
-  testButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
   },
   searchBarContainer: {
     position: 'absolute',
